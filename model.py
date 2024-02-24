@@ -5,7 +5,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
 # Load the dataset
-file_path = '/mnt/c/Users/nelso/projects/House_Price_Prediction/housing_prices/Housing.csv'
+file_path = 'housing_prices/Housing.csv'
 housing_data = pd.read_csv(file_path)
 
 # Display basic info of dataset
