@@ -17,6 +17,17 @@ features_to_drop = ['id', 'date', 'sqft_living', 'sqft_lot', 'waterfront',
                     'view', 'condition', 'grade', 'yr_renovated', 'zipcode', 'lat', 'long']
 housing_data = housing_data.drop(features_to_drop, axis=1)
 
+# Determine bounds for capping outliers
+Q1 = housing_data['price'].quantile(0.25)
+Q3 = housing_data['price'].quantile(0.75)
+IQR = Q3 - Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+# Cap the outliers
+housing_data['price'] = np.where(housing_data['price'] > upper_bound, upper_bound, housing_data['price'])
+housing_data['price'] = np.where(housing_data['price'] < lower_bound, lower_bound, housing_data['price'])
+
 # Display basic info of dataset
 dataset_info = {
     "First 5 Rows" : housing_data.head(),
