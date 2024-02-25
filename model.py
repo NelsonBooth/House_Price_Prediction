@@ -9,8 +9,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Load the dataset
-file_path = 'housing_prices/Housing.csv'
+file_path = 'kc_housing_prices/kc_house_data.csv'
 housing_data = pd.read_csv(file_path)
+
+# Drop specified features from dataset
+features_to_drop = ['id', 'date', 'sqft_living', 'sqft_lot', 'waterfront', 
+                    'view', 'condition', 'grade', 'yr_renovated', 'zipcode', 'lat', 'long']
+housing_data = housing_data.drop(features_to_drop, axis=1)
 
 # Display basic info of dataset
 dataset_info = {
@@ -63,17 +68,17 @@ print(preprocessed_data_info)
 # Implement hyperparameter tuning
 # Parameter grid to search
 param_grid = {
-    'n_estimators': [1700, 1800, 1900],
-    'max_depth': [35, 40, 45],
-    'min_samples_split': [4],
-    'min_samples_leaf': [1]
+    'n_estimators': [200, 300, 400],
+    'max_depth': [10, 20, 30],
+    'min_samples_split': [2, 3, 4],
+    'min_samples_leaf': [4, 5, 6]
 }
 
 # Create the Random Forest Regressor model
 rf_regressor = RandomForestRegressor(random_state=0)
 
 # Start grid search model
-grid_search = GridSearchCV(estimator=rf_regressor, param_grid=param_grid, cv=8, n_jobs=1,
+grid_search = GridSearchCV(estimator=rf_regressor, param_grid=param_grid, cv=10, n_jobs=-1,
                            verbose=2, scoring='neg_mean_squared_error')
 
 # Train the grid search on preprocessed training data
@@ -94,7 +99,6 @@ y_pred = best_rf_regressor.predict(X_test_preprocessed)
 mse = mean_squared_error(y_test, y_pred)
 rmse = np.sqrt(mse)
 r2 = r2_score(y_test, y_pred)
-print(f"MSE: {mse}")
 print(f"RMSE: {rmse}")
 print(f"R2 Score: {r2}")
 
