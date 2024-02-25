@@ -2,7 +2,11 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import GridSearchCV
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Load the dataset
 file_path = 'housing_prices/Housing.csv'
@@ -17,8 +21,9 @@ dataset_info = {
 }
 #print(dataset_info)
 
-# Preprocess the dataset
+#-------------------------------------------------------------------------------------------------------
 
+# Preprocess the dataset
 # Identify numerical and categorical columns
 numerical_cols = housing_data.select_dtypes(include=['int64', 'float64']).columns.drop('price')
 categorical_cols = housing_data.select_dtypes(include=['object']).columns
@@ -35,7 +40,7 @@ preprocessor = ColumnTransformer(
     ]
 )
 
-# Define features X and target y
+# Define features X and labels y
 X = housing_data.drop('price', axis=1)
 y = housing_data['price']
 
@@ -52,3 +57,52 @@ preprocessed_data_info = {
     "X_test_preprocessed" : X_test_preprocessed.shape
 }
 print(preprocessed_data_info)
+
+#-------------------------------------------------------------------------------------------------------
+
+# Implement hyperparameter tuning
+# Parameter grid to search
+param_grid = {
+    'n_estimators': [1700, 1800, 1900],
+    'max_depth': [35, 40, 45],
+    'min_samples_split': [4],
+    'min_samples_leaf': [1]
+}
+
+# Create the Random Forest Regressor model
+rf_regressor = RandomForestRegressor(random_state=0)
+
+# Start grid search model
+grid_search = GridSearchCV(estimator=rf_regressor, param_grid=param_grid, cv=8, n_jobs=1,
+                           verbose=2, scoring='neg_mean_squared_error')
+
+# Train the grid search on preprocessed training data
+grid_search.fit(X_train_preprocessed, y_train)
+
+# Display best parameters
+best_params = grid_search.best_params_
+print(f"Best Parameters: {best_params}")
+
+# Train the model with best parameters
+best_rf_regressor = RandomForestRegressor(**best_params, random_state=0)
+best_rf_regressor.fit(X_train_preprocessed, y_train)
+
+# Make predictions on test data
+y_pred = best_rf_regressor.predict(X_test_preprocessed)
+
+# Calculate performance metrics
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2 = r2_score(y_test, y_pred)
+print(f"MSE: {mse}")
+print(f"RMSE: {rmse}")
+print(f"R2 Score: {r2}")
+
+# Display a plot of actual vs predicted values
+plt.figure(figsize=(10, 6))
+plt.scatter(y_test, y_pred, alpha=0.5)
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], '--k')
+plt.xlabel('Actual')
+plt.ylabel('Predicted')
+plt.title('Actual vs. Predicted Values')
+plt.show()
